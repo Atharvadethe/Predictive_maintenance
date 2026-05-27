@@ -32,6 +32,7 @@ const APP = (() => {
             { id: 'index', icon: 'fa-th-large', label: 'Executive Overview', href: 'index.html' },
             { id: 'asset-health', icon: 'fa-heartbeat', label: 'Asset Health', href: 'asset-health.html' },
             { id: 'anomalies', icon: 'fa-exclamation-triangle', label: 'Anomaly Detection', href: 'anomalies.html', badge: DATA.alerts.filter(a => !a.acknowledged && a.level === 'Critical').length },
+            { id: 'ai-copilot', icon: 'fa-robot', label: 'Ask AI', href: 'ai-copilot.html' },
             { section: 'ANALYTICS' },
             { id: 'failure-rul', icon: 'fa-chart-area', label: 'Failure & RUL', href: 'failure-rul.html' },
             { id: 'maintenance', icon: 'fa-wrench', label: 'Maintenance', href: 'maintenance.html', badge: DATA.workOrders.filter(w => w.status === 'Open').length },
@@ -80,6 +81,7 @@ const APP = (() => {
             'index': 'Executive Overview',
             'asset-health': 'Asset Health Monitoring',
             'anomalies': 'Anomaly Detection',
+            'ai-copilot': 'Ask AI',
             'failure-rul': 'Failure & RUL Analytics',
             'maintenance': 'Maintenance Management',
             'trends': 'Trends & Analytics'
@@ -92,7 +94,7 @@ const APP = (() => {
         navbar.innerHTML = `
             <div class="navbar-left">
                 <div class="breadcrumb">
-                    <span>PdM Platform</span>
+                    <span>Home</span>
                     <span class="separator"><i class="fas fa-chevron-right"></i></span>
                     <span class="current">${pageName}</span>
                 </div>

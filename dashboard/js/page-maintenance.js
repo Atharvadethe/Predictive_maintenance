@@ -148,6 +148,7 @@ function renderMaintenancePage() {
                             <th>Type</th>
                             <th>Priority</th>
                             <th>Description</th>
+                            <th>Actions</th>
                             <th>Assigned To</th>
                             <th>Status</th>
                             <th>Cost</th>
@@ -202,20 +203,73 @@ function renderWOTable(workOrders) {
         else if (w.status === 'In Progress') statusBadge = '<span class="badge badge-info" style="font-size:9px">IN PROGRESS</span>';
         else statusBadge = '<span class="badge badge-healthy" style="font-size:9px">CLOSED</span>';
 
+        // Actions column: Approve / Reject for Open WOs
+        let actionsHtml = '';
+        if (w.status === 'Open') {
+            actionsHtml = `
+                <div class="flex gap-2">
+                    <button class="btn btn-sm btn-success" onclick="approveWO('${w.id}')">Approve</button>
+                    <button class="btn btn-sm btn-danger" onclick="rejectWO('${w.id}')">Reject</button>
+                </div>`;
+        } else if (w.status === 'In Progress') {
+            actionsHtml = `<button class="btn btn-sm btn-secondary" onclick="closeWO('${w.id}')">Mark Closed</button>`;
+        } else {
+            actionsHtml = `-`;
+        }
+
         return `
             <tr>
                 <td class="mono" style="font-weight:600;color:var(--accent)">${w.id}</td>
                 <td class="text-xs">${APP.formatDate(w.date)}</td>
                 <td class="mono" style="font-weight:600;color:var(--text-primary)">${w.assetId}</td>
-                <td><span class="text-xs" style="color:var(--text-secondary)">${w.type}</span></td>
+                <td><span class="text-xs" style="color:var(--text-secondary)">${w.type || ''}</span></td>
                 <td>${APP.createPriorityBadge(w.priority)}</td>
-                <td style="max-width:200px" class="truncate tooltip" data-tooltip="${w.description}">${w.description}</td>
-                <td class="text-xs">${w.technician}</td>
+                <td style="max-width:200px" class="truncate tooltip" data-tooltip="${w.description || ''}">${w.description || ''}</td>
+                <td>${actionsHtml}</td>
+                <td class="text-xs">${w.technician || ''}</td>
                 <td>${statusBadge}</td>
                 <td class="mono">${w.cost ? APP.formatCurrency(w.cost) : '—'}</td>
             </tr>
         `;
     }).join('');
+}
+
+// Approve a work order: set to In Progress and optionally assign a technician
+function approveWO(woId) {
+    const wo = DATA.workOrders.find(w => w.id === woId);
+    if (!wo) return;
+    wo.status = 'In Progress';
+    if (!wo.technician) wo.technician = 'Unassigned';
+    renderWOTable(filteredWO);
+    initMaintCharts();
+}
+
+// Reject a work order: mark as Closed and add a rejected flag
+function rejectWO(woId) {
+    const wo = DATA.workOrders.find(w => w.id === woId);
+    if (!wo) return;
+    wo.status = 'Closed';
+    wo.rejected = true;
+    wo.closed = new Date().toISOString();
+    renderWOTable(filteredWO);
+    initMaintCharts();
+}
+
+function closeWO(woId) {
+    const wo = DATA.workOrders.find(w => w.id === woId);
+    if (!wo) return;
+    wo.status = 'Closed';
+    wo.closed = new Date().toISOString();
+    renderWOTable(filteredWO);
+    initMaintCharts();
+}
+
+// Refresh the maintenance UI if the page is active
+function refreshMaintenance() {
+    const pageContent = document.getElementById('pageContent');
+    if (!pageContent) return;
+    // Re-render the entire maintenance page to refresh KPIs, tables and charts
+    renderMaintenancePage();
 }
 
 function initMaintCharts() {

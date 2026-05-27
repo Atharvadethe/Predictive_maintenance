@@ -7,12 +7,15 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFailureRUL();
 });
 
+let filteredRiskyAssets = [];
+
 function renderFailureRUL() {
     const content = document.getElementById('pageContent');
     const riskyAssets = DATA.assets.filter(a => DATA.getAssetState(a.id).status !== 'Healthy')
         .sort((a, b) => DATA.getAssetState(a.id).rulDays - DATA.getAssetState(b.id).rulDays);
     const critAssets = DATA.assets.filter(a => DATA.getAssetState(a.id).status === 'Critical');
     const avgFailProb = DATA.assets.reduce((s, a) => s + DATA.getFailureProb(a.id), 0) / DATA.assets.length;
+    filteredRiskyAssets = [...riskyAssets];
 
     content.innerHTML = `
         ${APP.renderPageHeader('Failure Prediction & RUL Analytics', 'AI-powered remaining useful life estimation and failure probability tracking')}
@@ -49,47 +52,57 @@ function renderFailureRUL() {
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label">Plant</label>
+                <select id="rulFilterPlant" onchange="applyRULFilters()">
+                    <option value="">All Plants</option>
+                    <option value="Plant-A">Plant-A</option>
+                    <option value="Plant-B">Plant-B</option>
+                    <option value="Plant-C">Plant-C</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Asset Type</label>
+                <select id="rulFilterType" onchange="applyRULFilters()">
+                    <option value="">All Types</option>
+                    <option value="compressor">Compressor</option>
+                    <option value="motor">Motor</option>
+                    <option value="pump">Pump</option>
+                    <option value="turbine">Turbine</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select id="rulFilterStatus" onchange="applyRULFilters()">
+                    <option value="">All Status</option>
+                    <option value="Healthy">Healthy</option>
+                    <option value="Warning">Warning</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Criticality</label>
+                <select id="rulFilterCriticality" onchange="applyRULFilters()">
+                    <option value="">All</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:flex-end">
+                <button class="btn btn-secondary btn-sm" onclick="resetRULFilters()"><i class="fas fa-sync-alt"></i> Reset</button>
+                <span class="text-xs text-muted" id="rulAssetCount">${riskyAssets.length} assets</span>
+            </div>
+        </div>
+
         <!-- RUL Cards for critical/warning assets -->
         <div class="section-header mb-4">
             <h3 class="section-title"><i class="fas fa-hourglass-half" style="margin-right:8px;color:var(--amber)"></i>Remaining Useful Life — At-Risk Assets</h3>
         </div>
-        <div class="grid grid-4 mb-5 stagger">
-            ${riskyAssets.map(a => {
-                const s = DATA.getAssetState(a.id);
-                const fp = DATA.getFailureProb(a.id);
-                const fm = s.failureMode ? DATA.failureModes[s.failureMode] : null;
-                return `
-                <div class="card" style="border-left:3px solid ${DATA.getStatusColor(s.status)}">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <div class="asset-id">${a.id}</div>
-                            <div class="text-xs text-muted">${DATA.formatAssetType(a.type)} · ${a.site}</div>
-                        </div>
-                        ${APP.createStatusBadge(s.status)}
-                    </div>
-                    <div class="flex items-center justify-between mb-4">
-                        ${APP.createProgressRing(s.healthIndex, 100, 64, 6)}
-                        <div style="text-align:right">
-                            <div class="text-xs text-muted">RUL</div>
-                            <div style="font-family:var(--font-mono);font-size:24px;font-weight:800;color:${APP.getHealthColor(s.healthIndex)}">${s.rulDays}<span style="font-size:12px;color:var(--text-muted)">d</span></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-3">
-                        <div class="stat-row" style="padding:4px 0">
-                            <span class="text-xs text-muted">Failure Prob.</span>
-                            <span class="mono text-sm" style="color:${fp > 70 ? 'var(--red)' : fp > 40 ? 'var(--amber)' : 'var(--green)'}">${fp.toFixed(1)}%</span>
-                        </div>
-                        <div class="stat-row" style="padding:4px 0">
-                            <span class="text-xs text-muted">Fault Type</span>
-                            <span class="text-sm">${fm ? fm.label : 'Unknown'}</span>
-                        </div>
-                        <div class="stat-row" style="padding:4px 0">
-                            <span class="text-xs text-muted">Confidence</span>
-                            <span class="mono text-sm text-green">${(85 + Math.random() * 12).toFixed(0)}%</span>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('')}
+        <div class="grid grid-4 mb-5 stagger" id="rulAssetsGrid">
+            <!-- Rendered dynamically -->
         </div>
 
         <div class="grid grid-2 mb-5">
@@ -210,7 +223,89 @@ function renderFailureRUL() {
         </div>
     `;
 
+    renderRULCards(riskyAssets);
     initFailureCharts(riskyAssets);
+}
+
+function applyRULFilters() {
+    const plant = document.getElementById('rulFilterPlant').value;
+    const type = document.getElementById('rulFilterType').value;
+    const status = document.getElementById('rulFilterStatus').value;
+    const criticality = document.getElementById('rulFilterCriticality').value;
+
+    const riskyAssets = DATA.assets.filter(a => DATA.getAssetState(a.id).status !== 'Healthy')
+        .sort((a, b) => DATA.getAssetState(a.id).rulDays - DATA.getAssetState(b.id).rulDays);
+
+    filteredRiskyAssets = riskyAssets.filter(a => {
+        const s = DATA.getAssetState(a.id);
+        if (plant && a.site !== plant) return false;
+        if (type && a.type !== type) return false;
+        if (status && s.status !== status) return false;
+        if (criticality && a.criticality !== criticality) return false;
+        return true;
+    });
+
+    document.getElementById('rulAssetCount').textContent = `${filteredRiskyAssets.length} assets`;
+    renderRULCards(filteredRiskyAssets);
+}
+
+function resetRULFilters() {
+    document.getElementById('rulFilterPlant').value = '';
+    document.getElementById('rulFilterType').value = '';
+    document.getElementById('rulFilterStatus').value = '';
+    document.getElementById('rulFilterCriticality').value = '';
+    applyRULFilters();
+}
+
+function renderRULCards(assets) {
+    const grid = document.getElementById('rulAssetsGrid');
+
+    if (!assets.length) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1">
+                <i class="fas fa-filter"></i>
+                <p>No at-risk assets match the selected filters.</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = assets.map(a => {
+        const s = DATA.getAssetState(a.id);
+        const fp = DATA.getFailureProb(a.id);
+        const fm = s.failureMode ? DATA.failureModes[s.failureMode] : null;
+        return `
+        <div class="card" style="border-left:3px solid ${DATA.getStatusColor(s.status)}">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <div class="asset-id">${a.id}</div>
+                    <div class="text-xs text-muted">${DATA.formatAssetType(a.type)} · ${a.site}</div>
+                </div>
+                ${APP.createStatusBadge(s.status)}
+            </div>
+            <div class="flex items-center justify-between mb-4">
+                ${APP.createProgressRing(s.healthIndex, 100, 64, 6)}
+                <div style="text-align:right">
+                    <div class="text-xs text-muted">RUL</div>
+                    <div style="font-family:var(--font-mono);font-size:24px;font-weight:800;color:${APP.getHealthColor(s.healthIndex)}">${s.rulDays}<span style="font-size:12px;color:var(--text-muted)">d</span></div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div class="stat-row" style="padding:4px 0">
+                    <span class="text-xs text-muted">Failure Prob.</span>
+                    <span class="mono text-sm" style="color:${fp > 70 ? 'var(--red)' : fp > 40 ? 'var(--amber)' : 'var(--green)'}">${fp.toFixed(1)}%</span>
+                </div>
+                <div class="stat-row" style="padding:4px 0">
+                    <span class="text-xs text-muted">Fault Type</span>
+                    <span class="text-sm">${fm ? fm.label : 'Unknown'}</span>
+                </div>
+                <div class="stat-row" style="padding:4px 0">
+                    <span class="text-xs text-muted">Confidence</span>
+                    <span class="mono text-sm text-green">${(85 + Math.random() * 12).toFixed(0)}%</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function initFailureCharts(riskyAssets) {

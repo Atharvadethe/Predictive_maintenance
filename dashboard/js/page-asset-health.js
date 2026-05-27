@@ -286,15 +286,21 @@ function initHealthCharts() {
 
     // Criticality Matrix (scatter-like using bar)
     const types = ['compressor', 'motor', 'pump', 'turbine'];
-    const critMap = { High: 3, Medium: 2, Low: 1 };
-    CHARTS.createBarChart('critMatrixChart',
+    const countByHealthBand = (assetType, band) => DATA.assets.filter(a => {
+        if (a.type !== assetType) return false;
+        const healthIndex = DATA.getAssetState(a.id).healthIndex;
+        if (band === 'Critical') return healthIndex < 35;
+        if (band === 'Warning') return healthIndex >= 35 && healthIndex < 70;
+        return healthIndex >= 70;
+    }).length;
+    CHARTS.createStackedBar('critMatrixChart',
         types.map(t => DATA.formatAssetType(t)),
         [
-            { label: 'Healthy', data: types.map(t => DATA.assets.filter(a => a.type === t && DATA.getAssetState(a.id).status === 'Healthy').length), color: CHARTS.COLORS.green },
-            { label: 'Warning', data: types.map(t => DATA.assets.filter(a => a.type === t && DATA.getAssetState(a.id).status === 'Warning').length), color: CHARTS.COLORS.amber },
-            { label: 'Critical', data: types.map(t => DATA.assets.filter(a => a.type === t && DATA.getAssetState(a.id).status === 'Critical').length), color: CHARTS.COLORS.red },
+            { label: 'Healthy', data: types.map(t => countByHealthBand(t, 'Healthy')), color: CHARTS.COLORS.green },
+            { label: 'Warning', data: types.map(t => countByHealthBand(t, 'Warning')), color: CHARTS.COLORS.amber },
+            { label: 'Critical', data: types.map(t => countByHealthBand(t, 'Critical')), color: CHARTS.COLORS.red, minBarLength: 8, borderRadius: 6 },
         ],
-        { stacked: true }
+        { stacked: true, plugins: { legend: { display: true } } }
     );
 
     // Utilization

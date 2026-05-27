@@ -69,10 +69,12 @@ function renderAnomalyPage() {
                                     <span>Score: <span style="color:${a.anomalyScore >= 0.85 ? 'var(--red)' : 'var(--amber)'}; font-weight:600">${a.anomalyScore.toFixed(2)}</span></span>
                                 </div>
                             </div>
-                            <div>
+                            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                                ${a.workOrderId ? `<span class="badge badge-amber" style="font-size:9px"><i class="fas fa-clipboard-list"></i> ${a.workOrderId}</span>` : ''}
                                 ${a.acknowledged
                                     ? '<span class="badge badge-healthy" style="font-size:9px"><i class="fas fa-check"></i> ACK</span>'
                                     : '<button class="btn btn-sm btn-danger" onclick="ackAlert(this)"><i class="fas fa-check"></i></button>'}
+                                ${a.workOrderId ? '' : `<button class="btn btn-sm btn-primary" onclick="createWorkOrder(this, '${a.id}')"><i class="fas fa-clipboard-list"></i> WO</button>`}
                             </div>
                         </div>
                     `).join('')}
@@ -239,13 +241,46 @@ function initAnomalyCharts() {
     CHARTS.createHeatmapGrid('anomalyHeatmap', critAssets.map(a => a.id), sensors.map(s => s.replace(/_/g,' ').slice(0,10)), heatData);
 
     // Breach by sensor
-    const sensorCounts = {};
-    DATA.alerts.forEach(a => { sensorCounts[a.sensor] = (sensorCounts[a.sensor] || 0) + 1; });
-    const sortedSensors = Object.entries(sensorCounts).sort((a,b) => b[1] - a[1]);
-    CHARTS.createBarChart('breachChart',
-        sortedSensors.map(s => s[0].replace(/_/g,' ')),
-        [{ label: 'Alert Count', data: sortedSensors.map(s => s[1]), colors: sortedSensors.map((s,i) => CHARTS.PALETTE[i % CHARTS.PALETTE.length]) }],
-        { plugins: { legend: { display: false } } }
+    const sensorTypeMap = {
+        vibration: 'Vibration',
+        temp: 'Temperature',
+        temperature: 'Temperature',
+        current: 'Current',
+        pressure: 'Pressure',
+        speed: 'Speed',
+        flow: 'Flow',
+        voltage: 'Voltage',
+    };
+
+    const alertBuckets = {};
+    DATA.alerts.forEach(a => {
+        const sensorKey = a.sensor.toLowerCase();
+        const sensorType = Object.keys(sensorTypeMap).find(key => sensorKey.includes(key)) || 'Other';
+        const displayType = sensorTypeMap[sensorType] || 'Other';
+
+        if (!alertBuckets[displayType]) {
+            alertBuckets[displayType] = { Critical: 0, Warning: 0 };
+        }
+        if (a.level === 'Critical') alertBuckets[displayType].Critical += 1;
+        if (a.level === 'Warning') alertBuckets[displayType].Warning += 1;
+    });
+
+    const sortedTypes = Object.entries(alertBuckets).sort((a, b) => (b[1].Critical + b[1].Warning) - (a[1].Critical + a[1].Warning));
+    CHARTS.createStackedBar('breachChart',
+        sortedTypes.map(s => s[0]),
+        [
+            {
+                label: 'Critical Alerts',
+                data: sortedTypes.map(s => s[1].Critical),
+                color: CHARTS.COLORS.red,
+            },
+            {
+                label: 'Warning Alerts',
+                data: sortedTypes.map(s => s[1].Warning),
+                color: CHARTS.COLORS.amber,
+            }
+        ],
+        { plugins: { legend: { display: true } } }
     );
 
     // Recurring
@@ -257,4 +292,63 @@ function initAnomalyCharts() {
         [{ label: 'Occurrences', data: sortedFailures.map(f => f[1]), colors: sortedFailures.map((f,i) => CHARTS.PALETTE[i]) }],
         { plugins: { legend: { display: false } } }
     );
+}
+
+function createWorkOrder(btn, alertId) {
+    // find alert
+    const alert = DATA.alerts.find(a => a.id === alertId);
+    if (!alert) return;
+
+    // generate a simple work order id
+    const existingCount = DATA.workOrders.length + 1;
+    const seq = String(existingCount).padStart(3, '0');
+    const woId = `WO-${alert.assetId}-${seq}`;
+
+    const priority = alert.level === 'Critical' ? 'P1' : 'P2';
+
+    const now = new Date().toISOString();
+    const newWO = {
+        id: woId,
+        assetId: alert.assetId,
+        date: now,
+        created: now,
+        closed: null,
+        priority,
+        status: 'Open',
+        trigger: 'AI Alert',
+        type: 'Corrective',
+        description: alert.reason || 'Work order created from alert',
+        faultType: alert.reason ? alert.reason.split('—')[0].trim().toLowerCase().replace(/ /g,'_') : 'unknown',
+        technician: null,
+        estDuration: '4h',
+        cost: 0,
+        slaHours: priority === 'P1' ? 12 : 24,
+        spareParts: []
+    };
+
+    // push to DATA
+    DATA.workOrders.push(newWO);
+    alert.workOrderId = woId;
+
+    // update UI: replace button with badge
+    const item = btn.closest('.alert-item');
+    if (item) {
+        const badgeHtml = `<span class="badge badge-amber" style="font-size:9px"><i class="fas fa-clipboard-list"></i> ${woId}</span>`;
+        // insert badge at top of control column
+        const controlDiv = item.querySelector('div:last-child');
+        if (controlDiv) {
+            // remove create button
+            const woBtn = controlDiv.querySelector('button.btn-primary');
+            if (woBtn) woBtn.remove();
+            // insert badge if not present
+            if (!controlDiv.querySelector('.badge-amber')) {
+                controlDiv.insertAdjacentHTML('afterbegin', badgeHtml);
+            }
+        }
+    }
+
+    // Optional: notify user
+    btn.disabled = true;
+    // trigger maintenance UI refresh if page is open
+    if (typeof refreshMaintenance === 'function') refreshMaintenance();
 }

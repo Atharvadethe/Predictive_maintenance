@@ -102,7 +102,7 @@ const CHARTS = (() => {
     function createBarChart(canvasId, labels, datasets, options = {}) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
-        return new Chart(ctx, {
+        const chart = new Chart(ctx, {
             type: 'bar',
             data: { labels, datasets: datasets.map((ds, i) => ({
                 label: ds.label,
@@ -112,6 +112,10 @@ const CHARTS = (() => {
                 borderRadius: ds.borderRadius || 4,
                 borderWidth: 0,
                 barThickness: ds.barThickness,
+                // ensure very small stacked segments remain visible
+                minBarLength: ds.minBarLength !== undefined ? ds.minBarLength : (options.stacked ? 6 : undefined),
+                borderSkipped: ds.borderSkipped !== undefined ? ds.borderSkipped : false,
+                // allow passing additional dataset options
                 ...ds.extra,
             }))},
             options: {
@@ -138,12 +142,24 @@ const CHARTS = (() => {
                 ...options.chartOptions,
             }
         });
+
+        // ensure chart fully renders after fonts/layout finish — avoids initial blank canvas
+        try {
+            setTimeout(() => { chart.resize(); chart.update(); }, 60);
+        } catch (e) {
+            // ignore
+        }
+
+        return chart;
     }
 
     // ─── Doughnut Chart ───
     function createDoughnutChart(canvasId, labels, data, colors, options = {}) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return null;
+        // ensure no border on slices and no stroke around legend boxes
+        const datasetBorderWidth = options.borderWidth !== undefined ? options.borderWidth : 0;
+        const datasetBorderColor = options.borderColor !== undefined ? options.borderColor : 'transparent';
         return new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -151,17 +167,24 @@ const CHARTS = (() => {
                 datasets: [{
                     data,
                     backgroundColor: colors || PALETTE.slice(0, data.length),
-                    borderColor: '#1a2332',
-                    borderWidth: 3,
-                    hoverOffset: 6,
+                    borderColor: datasetBorderColor,
+                    borderWidth: datasetBorderWidth,
+                    hoverOffset: options.hoverOffset || 6,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: options.cutout || '72%',
+                elements: {
+                    arc: { borderWidth: 0 }
+                },
                 plugins: {
-                    legend: { display: options.showLegend !== false, position: options.legendPos || 'bottom', labels: { padding: 12 } },
+                    legend: {
+                        display: options.showLegend !== false,
+                        position: options.legendPos || 'bottom',
+                        labels: { padding: 12, usePointStyle: true, boxWidth: options.boxWidth || 12 }
+                    },
                     ...options.plugins,
                 },
                 ...options.chartOptions,

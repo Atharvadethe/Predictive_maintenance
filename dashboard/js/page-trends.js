@@ -16,7 +16,6 @@ function renderTrendsPage() {
         <div class="tabs">
             <div class="tab active" onclick="switchTab(this, 'performance')">Asset Performance</div>
             <div class="tab" onclick="switchTab(this, 'reliability')">Reliability & RCM</div>
-            <div class="tab" onclick="switchTab(this, 'energy')">Energy Efficiency</div>
         </div>
 
         <div id="tab-performance" class="tab-content">
@@ -56,19 +55,6 @@ function renderTrendsPage() {
                     <div class="card-header"><span class="card-title">Root Cause Analysis (Top Faults)</span></div>
                     <div class="chart-container" style="height:300px"><canvas id="rcaChart"></canvas></div>
                 </div>
-            </div>
-        </div>
-
-        <div id="tab-energy" class="tab-content" style="display:none">
-            <div class="grid grid-3 mb-5 stagger">
-                ${metricCard('Total Energy', '124.5 MWh', 'fa-bolt', 'amber', 'Last 30 Days')}
-                ${metricCard('Energy Cost', '$14,250', 'fa-dollar-sign', 'red', 'Last 30 Days')}
-                ${metricCard('Carbon Footprint', '85.2 tCO2e', 'fa-leaf', 'green', '-4.5% vs Last Month')}
-            </div>
-
-            <div class="card mb-5">
-                <div class="card-header"><span class="card-title">Energy Consumption vs Health Index Anomaly</span></div>
-                <div class="chart-container" style="height:350px"><canvas id="energyChart"></canvas></div>
             </div>
         </div>
 
@@ -133,9 +119,4 @@ function initTrendCharts() {
         [CHARTS.COLORS.red, CHARTS.COLORS.amber, CHARTS.COLORS.blue, CHARTS.COLORS.purple, CHARTS.COLORS.cyan]
     );
 
-    // Energy
-    CHARTS.createLineChart('energyChart', months, [
-        { label: 'Energy Usage (MWh)', data: [110, 115, 130, 125, 140, 135, 124.5], color: CHARTS.COLORS.amber, fill: true },
-        { label: 'Avg Anomaly Score (×100)', data: [25, 28, 45, 35, 60, 42, 22], color: CHARTS.COLORS.red, fill: false, tension: 0.4 }
-    ]);
 }

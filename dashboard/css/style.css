@@ -127,6 +127,12 @@ a:hover { color: var(--accent-hover); }
     min-height: 100vh;
 }
 
+.top-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 110;
+}
+
 /* ─── Sidebar ─── */
 .sidebar {
     width: var(--sidebar-width);
@@ -291,19 +297,18 @@ a:hover { color: var(--accent-hover); }
 /* ─── Main Content Area ─── */
 .main-content {
     flex: 1;
-    margin-left: var(--sidebar-width);
+    margin-left: 0;
+    padding-top: calc(var(--navbar-height) + 118px + var(--sp-3));
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    transition: margin-left var(--transition);
+    transition: padding-top var(--transition);
 }
-
-.sidebar.collapsed ~ .main-content { margin-left: var(--sidebar-collapsed); }
 
 /* ─── Top Navbar ─── */
 .navbar {
     height: var(--navbar-height);
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-subtle);
@@ -311,9 +316,9 @@ a:hover { color: var(--accent-hover); }
     align-items: center;
     justify-content: space-between;
     padding: 0 var(--sp-6);
-    position: sticky;
+    position: relative;
     top: 0;
-    z-index: 50;
+    z-index: 111;
 }
 
 .navbar-left {
@@ -337,6 +342,92 @@ a:hover { color: var(--accent-hover); }
     display: flex;
     align-items: center;
     gap: var(--sp-4);
+}
+
+.brand-lockup {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-right: var(--sp-4);
+}
+
+/* ─── Horizontal Navigation ─── */
+.top-nav {
+    height: auto;
+    background: rgba(248, 251, 255, 0.98);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-6) var(--sp-3);
+    position: relative;
+    z-index: 109;
+    overflow: visible;
+}
+
+.top-nav-items {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.top-nav-items::-webkit-scrollbar { display: none; }
+
+.top-nav .nav-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    position: relative;
+    transition: all var(--transition);
+    flex: 0 0 auto;
+}
+
+.top-nav .nav-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.top-nav .nav-item.active {
+    background: var(--accent-muted);
+    color: var(--accent-hover);
+}
+
+.top-nav .nav-item.active::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 4px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--accent);
+}
+
+.top-nav-search {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-left: 0;
+}
+
+.top-nav-search .search-box {
+    min-width: 260px;
+    width: clamp(260px, 32vw, 420px);
 }
 
 .search-box {
@@ -1728,15 +1819,31 @@ select option { background: var(--bg-card); color: var(--text-primary); }
     .sidebar .nav-text,
     .sidebar .nav-section-title,
     .sidebar .nav-badge { display: none; }
-    .main-content { margin-left: var(--sidebar-collapsed); }
+    .main-content { margin-left: 0; padding-top: calc(var(--navbar-height) + 118px + var(--sp-2)); }
     .grid-3, .grid-4, .grid-5 { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
     .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
     .sidebar { display: none; }
-    .main-content { margin-left: 0; }
-    .search-box { min-width: 160px; }
+    .main-content { margin-left: 0; padding-top: calc(var(--navbar-height) + 142px + var(--sp-2)); }
+    .top-header { position: fixed; }
+    .top-nav {
+        padding: var(--sp-3) var(--sp-4) var(--sp-4);
+        gap: var(--sp-3);
+    }
+    .top-nav-items {
+        width: 100%;
+    }
+    .top-nav-search {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .top-nav-search .search-box,
+    .search-box {
+        min-width: 0;
+        width: 100%;
+    }
     .page-header { flex-direction: column; gap: var(--sp-3); }
     .filter-bar { flex-direction: column; }
 }

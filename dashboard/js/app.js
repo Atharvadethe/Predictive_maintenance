@@ -15,67 +15,15 @@ const APP = (() => {
     // ─── Initialize Layout ───
     function initLayout() {
         renderSidebar();
-        renderNavbar();
         renderFooter();
         renderNotificationPanel();
-        initSidebarToggle();
         initNotificationToggle();
         initSearch();
         startLiveUpdates();
     }
 
-    // ─── Sidebar ───
+    // ─── Top Navigation ───
     function renderSidebar() {
-        const currentPage = getCurrentPage();
-        const navItems = [
-            { section: 'MAIN' },
-            { id: 'index', icon: 'fa-th-large', label: 'Executive Overview', href: 'index.html' },
-            { id: 'asset-health', icon: 'fa-heartbeat', label: 'Asset Health', href: 'asset-health.html' },
-            { id: 'anomalies', icon: 'fa-exclamation-triangle', label: 'Anomaly Detection', href: 'anomalies.html', badge: DATA.alerts.filter(a => !a.acknowledged && a.level === 'Critical').length },
-            { id: 'ai-copilot', icon: 'fa-robot', label: 'Ask AI', href: 'ai-copilot.html' },
-            { section: 'ANALYTICS' },
-            { id: 'failure-rul', icon: 'fa-chart-area', label: 'Failure & RUL', href: 'failure-rul.html' },
-            { id: 'maintenance', icon: 'fa-wrench', label: 'Maintenance', href: 'maintenance.html', badge: DATA.workOrders.filter(w => w.status === 'Open').length },
-            { id: 'trends', icon: 'fa-chart-line', label: 'Trends & Reports', href: 'trends.html' },
-        ];
-
-        const sidebar = document.createElement('aside');
-        sidebar.className = 'sidebar';
-        sidebar.id = 'sidebar';
-        sidebar.innerHTML = `
-            <div class="sidebar-header">
-                <div class="sidebar-logo"><i class="fas fa-industry"></i></div>
-                <div class="sidebar-brand">
-                    <h1>PdM Intelligence</h1>
-                    <span>Industrial AI Platform</span>
-                </div>
-            </div>
-            <nav class="sidebar-nav">
-                ${navItems.map(item => {
-                    if (item.section) {
-                        return `<div class="nav-section-title">${item.section}</div>`;
-                    }
-                    const isActive = currentPage === item.id;
-                    const badge = item.badge ? `<span class="nav-badge">${item.badge}</span>` : '';
-                    return `<a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}">
-                        <i class="fas ${item.icon}"></i>
-                        <span class="nav-text">${item.label}</span>
-                        ${badge}
-                    </a>`;
-                }).join('')}
-            </nav>
-            <div class="sidebar-footer">
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-chevron-left"></i>
-                    <span class="nav-text">Collapse</span>
-                </button>
-            </div>
-        `;
-        document.querySelector('.app-container').prepend(sidebar);
-    }
-
-    // ─── Navbar ───
-    function renderNavbar() {
         const currentPage = getCurrentPage();
         const pageNames = {
             'index': 'Executive Overview',
@@ -86,39 +34,71 @@ const APP = (() => {
             'maintenance': 'Maintenance Management',
             'trends': 'Trends & Analytics'
         };
-        const pageName = pageNames[currentPage] || 'Dashboard';
-        const unread = DATA.notifications.filter(n => !n.read).length;
+        const navItems = [
+            { id: 'index', icon: 'fa-th-large', label: 'Executive Overview', href: 'index.html' },
+            { id: 'asset-health', icon: 'fa-heartbeat', label: 'Asset Health', href: 'asset-health.html' },
+            { id: 'anomalies', icon: 'fa-exclamation-triangle', label: 'Anomaly Detection', href: 'anomalies.html', badge: DATA.alerts.filter(a => !a.acknowledged && a.level === 'Critical').length },
+            { id: 'ai-copilot', icon: 'fa-robot', label: 'Ask AI', href: 'ai-copilot.html' },
+            { id: 'failure-rul', icon: 'fa-chart-area', label: 'Failure & RUL', href: 'failure-rul.html' },
+            { id: 'maintenance', icon: 'fa-wrench', label: 'Maintenance', href: 'maintenance.html', badge: DATA.workOrders.filter(w => w.status === 'Open').length },
+            { id: 'trends', icon: 'fa-chart-line', label: 'Trends & Reports', href: 'trends.html' },
+        ];
 
-        const navbar = document.createElement('header');
-        navbar.className = 'navbar';
-        navbar.innerHTML = `
-            <div class="navbar-left">
-                <div class="breadcrumb">
-                    <span>Home</span>
-                    <span class="separator"><i class="fas fa-chevron-right"></i></span>
-                    <span class="current">${pageName}</span>
+        const unread = DATA.notifications.filter(n => !n.read).length;
+        const topNav = document.createElement('header');
+        topNav.className = 'top-header';
+        topNav.innerHTML = `
+            <div class="navbar">
+                <div class="navbar-left">
+                    <div class="brand-lockup">
+                        <div class="sidebar-logo"><i class="fas fa-industry"></i></div>
+                        <div class="sidebar-brand">
+                            <h1>PdM Intelligence</h1>
+                            <span>Industrial AI Platform</span>
+                        </div>
+                    </div>
+                    <div class="breadcrumb">
+                        <span>Home</span>
+                        <span class="separator"><i class="fas fa-chevron-right"></i></span>
+                        <span class="current">${pageNames[currentPage] || 'Dashboard'}</span>
+                    </div>
+                </div>
+                <div class="navbar-right">
+                    <div class="live-indicator">
+                        <span class="live-dot"></span>
+                        <span>Live</span>
+                    </div>
+                    <button class="navbar-icon-btn" id="exportBtn" title="Export">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="navbar-icon-btn" id="notificationBtn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                        ${unread > 0 ? '<span class="notification-dot"></span>' : ''}
+                    </button>
+                    <div class="user-avatar" title="Admin User">AU</div>
                 </div>
             </div>
-            <div class="navbar-right">
-                <div class="live-indicator">
-                    <span class="live-dot"></span>
-                    <span>Live</span>
+            <div class="top-nav" id="topNav">
+                <nav class="top-nav-items">
+                    ${navItems.map(item => {
+                        const isActive = currentPage === item.id;
+                        const badge = item.badge ? `<span class="nav-badge">${item.badge}</span>` : '';
+                        return `<a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}">
+                            <i class="fas ${item.icon}"></i>
+                            <span class="nav-text">${item.label}</span>
+                            ${badge}
+                        </a>`;
+                    }).join('')}
+                </nav>
+                <div class="top-nav-search">
+                    <div class="search-box" id="searchBox">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search assets, alerts..." id="globalSearch">
+                    </div>
                 </div>
-                <div class="search-box" id="searchBox">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search assets, alerts..." id="globalSearch">
-                </div>
-                <button class="navbar-icon-btn" id="exportBtn" title="Export">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button class="navbar-icon-btn" id="notificationBtn" title="Notifications">
-                    <i class="fas fa-bell"></i>
-                    ${unread > 0 ? '<span class="notification-dot"></span>' : ''}
-                </button>
-                <div class="user-avatar" title="Admin User">AU</div>
             </div>
         `;
-        document.querySelector('.main-content').prepend(navbar);
+        document.querySelector('.app-container').prepend(topNav);
     }
 
     // ─── Footer ───
@@ -160,19 +140,6 @@ const APP = (() => {
             </div>
         `;
         document.body.appendChild(panel);
-    }
-
-    // ─── Sidebar Toggle ───
-    function initSidebarToggle() {
-        const btn = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        if (!btn || !sidebar) return;
-        btn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            const icon = btn.querySelector('i');
-            icon.classList.toggle('fa-chevron-left');
-            icon.classList.toggle('fa-chevron-right');
-        });
     }
 
     // ─── Notification Toggle ───

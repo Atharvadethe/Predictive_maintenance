@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderExecutiveDashboard() {
     const content = document.getElementById('pageContent');
     const k = DATA.kpis;
+    const warningMtbf = getGroupMtbf('Warning');
+    const criticalMtbf = getGroupMtbf('Critical');
 
     content.innerHTML = `
         ${APP.renderPageHeader(
@@ -27,8 +29,8 @@ function renderExecutiveDashboard() {
         </div>
 
         <div class="grid grid-4 mb-5 stagger">
-            ${kpiCard('OEE', k.oee, 'fa-tachometer-alt', 'blue', 'Overall Equipment Effectiveness', '+1.2% vs target', 'up', '%')}
-            ${kpiCard('MTBF', k.mtbf, 'fa-clock', 'green', 'Mean Time Between Failures', '+12h improvement', 'up', ' hrs')}
+            ${kpiCard('Warning Machine MTBF', warningMtbf, 'fa-exclamation-triangle', 'amber', 'Avg across warning assets', 'At-risk fleet watch', 'neutral', ' hrs')}
+            ${kpiCard('Critical Machine MTBF', criticalMtbf, 'fa-times-circle', 'red', 'Avg across critical assets', 'Immediate attention', 'down', ' hrs')}
             ${kpiCard('MTTR', k.mttr, 'fa-tools', 'amber', 'Mean Time To Repair', '−0.8h faster', 'up', ' hrs')}
             ${kpiCard('Active WOs', k.activeWorkOrders, 'fa-clipboard-list', 'purple', `${DATA.workOrders.filter(w=>w.status==='Open').length} open, ${DATA.workOrders.filter(w=>w.status==='In Progress').length} in progress`, '4 closed this week', 'neutral')}
         </div>
@@ -232,6 +234,17 @@ function renderExecutiveDashboard() {
     // ─── Render Charts ───
     initCharts();
     animateKPIs();
+}
+
+function getGroupMtbf(status) {
+    const group = DATA.assets
+        .filter(asset => DATA.assetCurrentState[asset.id]?.status === status)
+        .map(asset => DATA.assetCurrentState[asset.id]);
+
+    if (!group.length) return 0;
+
+    const avgRulDays = group.reduce((sum, item) => sum + item.rulDays, 0) / group.length;
+    return Math.round(avgRulDays * 24);
 }
 
 function kpiCard(label, value, icon, color, subtitle, trend, trendDir, suffix = '') {

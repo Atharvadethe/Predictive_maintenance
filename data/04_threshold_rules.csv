@@ -1,0 +1,9 @@
+asset_type,tag_name,rule_type,warn,crit,window_points,enabled
+compressor,vibration_rms,static_threshold,6.0,9.0,30,True
+compressor,bearing_temp,static_threshold,85.0,100.0,30,True
+compressor,discharge_pressure,zscore,2.0,3.0,60,True
+compressor,motor_current,slope,0.03,0.05,120,True
+motor,vibration_rms,static_threshold,5.5,8.5,30,True
+motor,winding_temp,static_threshold,90.0,110.0,30,True
+motor,current_rms,zscore,2.0,3.0,60,True
+motor,voltage_imbalance,static_threshold,2.5,4.0,30,True

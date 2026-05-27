@@ -45,33 +45,14 @@ Core value: surface which equipment will fail and when so teams can plan mainten
 
 Open these files in the `dashboard/` folder to inspect the implementation.
 
-## Running the POC Locally
-
-Recommended: serve the `dashboard/` folder with a simple HTTP server (some browsers restrict local file access for JS). From the workspace root run:
-
-```powershell
-# (Windows PowerShell)
-cd "c:\Users\atharva.dethe\Desktop\initial dashboard\Synthetic Data\dashboard"
-python -m http.server 8000
-# then open http://localhost:8000 in your browser
-```
-
-Or use any static file server or Live Server extension in your editor.
 
 ## Data
 
 This demo uses synthetic data located under `data/`. To move to production, replace the synthetic ingestion with a SCADA or historian API feed (typical integration effort: 1–2 weeks for a single plant pilot).
 
-## Next Steps / Pilot Guidance
-
-- Pilot scope: connect one plant's SCADA stream, validate alerts for a subset of 5–10 assets, and run the model for 2–4 weeks.
-- Integration effort: ~2–4 weeks for a pilot (data mapping, access, lightweight ETL).
-- Deployment: scale to 3 plants in 6–8 weeks with operator training and model retraining.
 
 ## Business Impact
 
 This platform turns maintenance from reactive to proactive, reducing unplanned downtime by 40–60% (industry benchmark), lowering emergency repair costs, and improving OEE by 5–15% in pilot deployments.
 
 ---
-
-If you want, I can: run the demo locally, add a tiny HTTP server script, or update the dashboards to read a live API. Which would you like next?

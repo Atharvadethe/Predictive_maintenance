@@ -43,6 +43,7 @@ const COPILOT = (() => {
 
     function renderPage() {
         const content = document.getElementById('pageContent');
+        content.classList.add('copilot-compact');
         content.innerHTML = `
             ${APP.renderPageHeader('Ask AI', 'Industrial Predictive Maintenance assistant for assets, anomalies, RUL, alerts, work orders, KPIs, and operational decisions')}
 
@@ -225,19 +226,29 @@ const COPILOT = (() => {
                     <div class="copilot-progress"><span style="width:${DATA.kpis.plantHealthScore}%"></span></div>
                 </div>
                 <div class="copilot-metric">
-                    <div class="label">Critical Assets</div>
-                    <div class="value">${DATA.kpis.critical}</div>
-                    <div class="label" style="margin-top:8px">Immediate escalation required</div>
+                    <div class="label">OEE</div>
+                    <div class="value">${DATA.kpis.oee.toFixed(1)}%</div>
+                    <div class="label" style="margin-top:8px">Overall equipment effectiveness</div>
                 </div>
                 <div class="copilot-metric">
-                    <div class="label">Open Alerts</div>
-                    <div class="value">${openAlerts.length}</div>
-                    <div class="label" style="margin-top:8px">Unacknowledged anomalies</div>
+                    <div class="label">MTBF</div>
+                    <div class="value">${DATA.kpis.mtbf}h</div>
+                    <div class="label" style="margin-top:8px">Mean time between failures</div>
                 </div>
                 <div class="copilot-metric">
-                    <div class="label">SLA Breaches</div>
-                    <div class="value">${breaches.length}</div>
-                    <div class="label" style="margin-top:8px">Work orders overdue</div>
+                    <div class="label">MTTR</div>
+                    <div class="value">${DATA.kpis.mttr.toFixed(1)}h</div>
+                    <div class="label" style="margin-top:8px">Mean time to repair</div>
+                </div>
+                <div class="copilot-metric">
+                    <div class="label">Active WOs</div>
+                    <div class="value">${DATA.kpis.activeWorkOrders}</div>
+                    <div class="label" style="margin-top:8px">Open maintenance workload</div>
+                </div>
+                <div class="copilot-metric">
+                    <div class="label">Avg RUL</div>
+                    <div class="value">${DATA.kpis.avgRul}d</div>
+                    <div class="label" style="margin-top:8px">Remaining useful life</div>
                 </div>
             </div>
 

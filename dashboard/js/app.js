@@ -5,6 +5,11 @@
 
 const APP = (() => {
 
+    function themeVar(name, fallback = '') {
+        const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return value || fallback;
+    }
+
     // ─── Current Page Detection ───
     function getCurrentPage() {
         const path = window.location.pathname;
@@ -261,15 +266,18 @@ const APP = (() => {
     }
 
     function getHealthColor(hi) {
-        if (hi >= 80) return '#10b981';
-        if (hi >= 55) return '#f59e0b';
-        return '#ef4444';
+        if (hi >= 80) return themeVar('--green', '#0f766e');
+        if (hi >= 55) return themeVar('--amber', '#7c3aed');
+        return themeVar('--red', '#1d4ed8');
     }
 
     function getHealthGradient(hi) {
-        if (hi >= 80) return 'linear-gradient(90deg, #10b981, #34d399)';
-        if (hi >= 55) return 'linear-gradient(90deg, #f59e0b, #fbbf24)';
-        return 'linear-gradient(90deg, #ef4444, #f87171)';
+        const green = themeVar('--green', '#0f766e');
+        const amber = themeVar('--amber', '#7c3aed');
+        const red = themeVar('--red', '#1d4ed8');
+        if (hi >= 80) return `linear-gradient(90deg, ${green}, ${green})`;
+        if (hi >= 55) return `linear-gradient(90deg, ${amber}, ${amber})`;
+        return `linear-gradient(90deg, ${red}, ${red})`;
     }
 
     function createProgressRing(value, max, size = 60, strokeWidth = 5, color = null) {

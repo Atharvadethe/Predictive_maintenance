@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderExecutiveDashboard() {
     const content = document.getElementById('pageContent');
+    content.classList.add('overview-compact');
     const k = DATA.kpis;
     const warningMtbf = getGroupMtbf('Warning');
     const criticalMtbf = getGroupMtbf('Critical');
@@ -20,15 +21,11 @@ function renderExecutiveDashboard() {
             `<div class="live-indicator"><span class="live-dot"></span><span>Plant-A, Plant-B, Plant-C</span></div>`
         )}
 
-        <!-- KPI Cards Row -->
-        <div class="grid grid-4 mb-5 stagger" id="kpiGrid">
+        <div class="grid grid-8 mb-4 stagger overview-kpis" id="kpiGrid">
             ${kpiCard('Total Assets', k.totalAssets, 'fa-cubes', 'blue', '30 monitored across 3 plants', '+2 this month', 'up')}
             ${kpiCard('Healthy', k.healthy, 'fa-check-circle', 'green', `${((k.healthy/k.totalAssets)*100).toFixed(0)}% of fleet`, '+3 vs last week', 'up')}
             ${kpiCard('Warning', k.warning, 'fa-exclamation-circle', 'amber', 'Inspection scheduled', '−1 vs last week', 'up')}
             ${kpiCard('Critical', k.critical, 'fa-times-circle', 'red', 'Immediate action required', '+1 vs last week', 'down')}
-        </div>
-
-        <div class="grid grid-4 mb-5 stagger">
             ${kpiCard('Warning Machine MTBF', warningMtbf, 'fa-exclamation-triangle', 'amber', 'Avg across warning assets', 'At-risk fleet watch', 'neutral', ' hrs')}
             ${kpiCard('Critical Machine MTBF', criticalMtbf, 'fa-times-circle', 'red', 'Avg across critical assets', 'Immediate attention', 'down', ' hrs')}
             ${kpiCard('MTTR', k.mttr, 'fa-tools', 'amber', 'Mean Time To Repair', '−0.8h faster', 'up', ' hrs')}

@@ -524,18 +524,37 @@ const DATA = (() => {
     }
 
     function getStatusColor(status) {
-        const colors = { Healthy: '#10b981', Warning: '#f59e0b', Critical: '#ef4444', Normal: '#10b981', Info: '#3b82f6' };
-        return colors[status] || '#64748b';
+        const colors = {
+            Healthy: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#0f766e',
+            Warning: getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#7c3aed',
+            Critical: getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#1d4ed8',
+            Normal: getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#0f766e',
+            Info: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#2563eb'
+        };
+        return colors[status] || (getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#5d7da8');
     }
 
     function getStatusBg(status) {
-        const colors = { Healthy: 'rgba(16,185,129,0.15)', Warning: 'rgba(245,158,11,0.15)', Critical: 'rgba(239,68,68,0.15)' };
-        return colors[status] || 'rgba(100,116,139,0.15)';
+        const green = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#0f766e';
+        const amber = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#7c3aed';
+        const red = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#1d4ed8';
+        const fallback = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#5d7da8';
+        const colors = {
+            Healthy: `rgba(${parseInt(green.slice(1, 3), 16)}, ${parseInt(green.slice(3, 5), 16)}, ${parseInt(green.slice(5, 7), 16)}, 0.15)`,
+            Warning: `rgba(${parseInt(amber.slice(1, 3), 16)}, ${parseInt(amber.slice(3, 5), 16)}, ${parseInt(amber.slice(5, 7), 16)}, 0.15)`,
+            Critical: `rgba(${parseInt(red.slice(1, 3), 16)}, ${parseInt(red.slice(3, 5), 16)}, ${parseInt(red.slice(5, 7), 16)}, 0.15)`
+        };
+        return colors[status] || `rgba(${parseInt(fallback.slice(1, 3), 16)}, ${parseInt(fallback.slice(3, 5), 16)}, ${parseInt(fallback.slice(5, 7), 16)}, 0.15)`;
     }
 
     function getPriorityColor(p) {
-        const colors = { P1: '#ef4444', P2: '#f59e0b', P3: '#3b82f6', P4: '#64748b' };
-        return colors[p] || '#64748b';
+        const colors = {
+            P1: getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#1d4ed8',
+            P2: getComputedStyle(document.documentElement).getPropertyValue('--amber').trim() || '#7c3aed',
+            P3: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#2563eb',
+            P4: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#5d7da8'
+        };
+        return colors[p] || colors.P4;
     }
 
     function formatAssetType(type) {

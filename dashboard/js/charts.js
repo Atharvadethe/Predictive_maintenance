@@ -5,20 +5,46 @@
 
 const CHARTS = (() => {
 
+    function themeVar(name, fallback = '') {
+        const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return value || fallback;
+    }
+
+    function withAlpha(color, alpha) {
+        if (!color) return color;
+        const hex = color.replace('#', '');
+        if (hex.length === 3) {
+            const r = parseInt(hex[0] + hex[0], 16);
+            const g = parseInt(hex[1] + hex[1], 16);
+            const b = parseInt(hex[2] + hex[2], 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+        if (hex.length === 6) {
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+        return color;
+    }
+
     // ─── Global Chart.js Defaults ───
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.borderColor = 'rgba(42, 58, 78, 0.5)';
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = themeVar('--text-muted', '#5d7da8');
+    Chart.defaults.borderColor = themeVar('--border-subtle', '#d8e3f3');
+    Chart.defaults.font.family = themeVar('--font-sans', "'Inter', sans-serif");
     Chart.defaults.font.size = 11;
+    Chart.defaults.plugins.legend.labels.color = themeVar('--text-muted', '#5d7da8');
     Chart.defaults.plugins.legend.labels.usePointStyle = true;
     Chart.defaults.plugins.legend.labels.pointStyleWidth = 10;
     Chart.defaults.plugins.legend.labels.padding = 16;
-    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+    Chart.defaults.plugins.tooltip.backgroundColor = themeVar('--bg-surface', '#ffffff');
+    Chart.defaults.plugins.tooltip.titleColor = themeVar('--text-primary', '#0f2f5f');
+    Chart.defaults.plugins.tooltip.bodyColor = themeVar('--text-secondary', '#315a8a');
     Chart.defaults.plugins.tooltip.titleFont = { size: 12, weight: '600' };
     Chart.defaults.plugins.tooltip.bodyFont = { size: 11 };
     Chart.defaults.plugins.tooltip.padding = 10;
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
-    Chart.defaults.plugins.tooltip.borderColor = 'rgba(42, 58, 78, 0.8)';
+    Chart.defaults.plugins.tooltip.borderColor = themeVar('--border-default', '#c5d6ea');
     Chart.defaults.plugins.tooltip.borderWidth = 1;
     Chart.defaults.elements.point.radius = 2;
     Chart.defaults.elements.point.hoverRadius = 5;
@@ -28,24 +54,21 @@ const CHARTS = (() => {
 
     // ─── Color Palette ───
     const COLORS = {
-        blue: '#3b82f6',
-        cyan: '#06b6d4',
-        green: '#10b981',
-        amber: '#f59e0b',
-        red: '#ef4444',
-        purple: '#8b5cf6',
-        pink: '#ec4899',
-        indigo: '#6366f1',
-        teal: '#14b8a6',
-        orange: '#f97316',
-        blueBg: 'rgba(59, 130, 246, 0.12)',
-        greenBg: 'rgba(16, 185, 129, 0.12)',
-        amberBg: 'rgba(245, 158, 11, 0.12)',
-        redBg: 'rgba(239, 68, 68, 0.12)',
-        purpleBg: 'rgba(139, 92, 246, 0.12)',
+        blue: themeVar('--blue', '#2563eb'),
+        cyan: themeVar('--cyan', '#0ea5e9'),
+        green: themeVar('--green', '#0f766e'),
+        amber: themeVar('--amber', '#7c3aed'),
+        red: themeVar('--red', '#1d4ed8'),
+        purple: themeVar('--purple', '#3b82f6'),
+        pink: themeVar('--pink', '#60a5fa'),
+        blueBg: withAlpha(themeVar('--blue', '#2563eb'), 0.12),
+        greenBg: withAlpha(themeVar('--green', '#0f766e'), 0.12),
+        amberBg: withAlpha(themeVar('--amber', '#7c3aed'), 0.12),
+        redBg: withAlpha(themeVar('--red', '#1d4ed8'), 0.12),
+        purpleBg: withAlpha(themeVar('--purple', '#3b82f6'), 0.12),
     };
 
-    const PALETTE = [COLORS.blue, COLORS.cyan, COLORS.green, COLORS.amber, COLORS.red, COLORS.purple, COLORS.pink, COLORS.indigo, COLORS.teal, COLORS.orange];
+    const PALETTE = [COLORS.blue, COLORS.cyan, COLORS.green, COLORS.amber, COLORS.red, COLORS.purple, COLORS.pink];
 
     function createGradient(ctx, color1, color2, height = 300) {
         const gradient = ctx.createLinearGradient(0, 0, 0, height);
@@ -64,7 +87,7 @@ const CHARTS = (() => {
                 label: ds.label,
                 data: ds.data,
                 borderColor: ds.color || PALETTE[i % PALETTE.length],
-                backgroundColor: ds.fill ? createGradient(ctx.getContext('2d'), (ds.color || PALETTE[i]) + '30', 'transparent') : 'transparent',
+                backgroundColor: ds.fill ? createGradient(ctx.getContext('2d'), withAlpha(ds.color || PALETTE[i % PALETTE.length], 0.28), 'transparent') : 'transparent',
                 borderWidth: ds.borderWidth || 2,
                 fill: ds.fill || false,
                 pointRadius: ds.pointRadius !== undefined ? ds.pointRadius : 1,
@@ -82,13 +105,13 @@ const CHARTS = (() => {
                 },
                 scales: {
                     x: {
-                        grid: { display: false },
+                        grid: { display: false, color: themeVar('--border-subtle', '#d8e3f3') },
                         ticks: { maxTicksLimit: options.maxXTicks || 12 },
                         ...options.xScale,
                     },
                     y: {
                         beginAtZero: options.beginAtZero !== false,
-                        grid: { color: 'rgba(42,58,78,0.3)' },
+                        grid: { color: withAlpha(themeVar('--border-default', '#c5d6ea'), 0.7) },
                         ...options.yScale,
                     },
                     ...options.scales,
@@ -128,13 +151,13 @@ const CHARTS = (() => {
                 },
                 scales: {
                     x: {
-                        grid: { display: options.horizontal ? true : false, color: 'rgba(42,58,78,0.3)' },
+                        grid: { display: options.horizontal ? true : false, color: withAlpha(themeVar('--border-default', '#c5d6ea'), 0.7) },
                         stacked: options.stacked || false,
                         ...options.xScale,
                     },
                     y: {
                         beginAtZero: true,
-                        grid: { color: options.horizontal ? 'transparent' : 'rgba(42,58,78,0.3)' },
+                        grid: { color: options.horizontal ? 'transparent' : withAlpha(themeVar('--border-default', '#c5d6ea'), 0.7) },
                         stacked: options.stacked || false,
                         ...options.yScale,
                     },
@@ -222,7 +245,7 @@ const CHARTS = (() => {
             data: {
                 datasets: [{
                     data: [value, max - value],
-                    backgroundColor: [options.color || color, 'rgba(42,58,78,0.3)'],
+                    backgroundColor: [options.color || color, withAlpha(themeVar('--border-default', '#c5d6ea'), 0.7)],
                     borderWidth: 0,
                     circumference: 270,
                     rotation: 225,
@@ -242,12 +265,12 @@ const CHARTS = (() => {
                     const cy = (chartArea.top + chartArea.bottom) / 2 + 10;
                     c.save();
                     c.textAlign = 'center';
-                    c.font = "700 24px 'JetBrains Mono', monospace";
-                    c.fillStyle = '#f1f5f9';
+                    c.font = `700 24px ${themeVar('--font-mono', "'JetBrains Mono', monospace")}`;
+                    c.fillStyle = themeVar('--text-primary', '#0f2f5f');
                     c.fillText(Math.round(value) + (options.suffix || ''), cx, cy);
                     if (options.sublabel) {
-                        c.font = "500 11px 'Inter', sans-serif";
-                        c.fillStyle = '#64748b';
+                        c.font = `500 11px ${themeVar('--font-sans', "'Inter', sans-serif")}`;
+                        c.fillStyle = themeVar('--text-muted', '#5d7da8');
                         c.fillText(options.sublabel, cx, cy + 18);
                     }
                     c.restore();
@@ -273,10 +296,10 @@ const CHARTS = (() => {
             cols.forEach((col, ci) => {
                 const val = data[ri]?.[ci] || 0;
                 let bg;
-                if (val >= 0.85) bg = 'rgba(239,68,68,0.8)';
-                else if (val >= 0.55) bg = 'rgba(245,158,11,0.7)';
-                else if (val > 0.1) bg = 'rgba(59,130,246,0.4)';
-                else bg = 'rgba(16,185,129,0.2)';
+                if (val >= 0.85) bg = withAlpha(themeVar('--red', '#1d4ed8'), 0.8);
+                else if (val >= 0.55) bg = withAlpha(themeVar('--amber', '#7c3aed'), 0.7);
+                else if (val > 0.1) bg = withAlpha(themeVar('--blue', '#2563eb'), 0.4);
+                else bg = withAlpha(themeVar('--green', '#0f766e'), 0.2);
                 container.innerHTML += `<div class="heatmap-cell" style="background:${bg}" title="${row} / ${col}: ${val.toFixed(2)}">${val > 0.1 ? val.toFixed(1) : ''}</div>`;
             });
         });

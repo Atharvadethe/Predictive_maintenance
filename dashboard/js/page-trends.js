@@ -9,6 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderTrendsPage() {
     const content = document.getElementById('pageContent');
+    content.classList.add('trends-compact');
+
+    const latestMonthlyTrend = DATA.monthlyTrends;
+    const oeeDelta = (latestMonthlyTrend.oee[latestMonthlyTrend.oee.length - 1] - latestMonthlyTrend.oee[latestMonthlyTrend.oee.length - 2]).toFixed(1);
+    const mtbfDelta = latestMonthlyTrend.mtbf[latestMonthlyTrend.mtbf.length - 1] - latestMonthlyTrend.mtbf[latestMonthlyTrend.mtbf.length - 2];
+    const downtimeDelta = (latestMonthlyTrend.downtime[latestMonthlyTrend.downtime.length - 1] - latestMonthlyTrend.downtime[latestMonthlyTrend.downtime.length - 2]).toFixed(1);
+    const plantHealth = DATA.kpis.plantHealthScore;
+    const predictiveAccuracy = DATA.kpis.predictiveAccuracy;
 
     content.innerHTML = `
         ${APP.renderPageHeader('Trends & Analytics', 'Long-term asset performance, OEE, MTBF, and operational efficiency analysis')}
@@ -19,46 +27,50 @@ function renderTrendsPage() {
         </div>
 
         <div id="tab-performance" class="tab-content">
-            <div class="grid grid-4 mb-5 stagger">
+            <div class="grid grid-6 mb-4 stagger" id="performanceKpis">
                 ${metricCard('OEE Average', '87.4%', 'fa-chart-pie', 'blue', '+2.1% YTD')}
                 ${metricCard('Availability', '94.2%', 'fa-clock', 'green', 'Target: 95.0%')}
                 ${metricCard('Performance', '96.5%', 'fa-tachometer-alt', 'blue', 'Optimal')}
                 ${metricCard('Quality Rate', '99.1%', 'fa-check-circle', 'green', 'Minimal defects')}
+                ${metricCard('Downtime', DATA.kpis.downtimePct + '%', 'fa-exclamation-triangle', 'amber', `${downtimeDelta > 0 ? '+' : ''}${downtimeDelta}% vs prior month`)}
+                ${metricCard('Plant Health', plantHealth + '%', 'fa-heartbeat', 'purple', `${oeeDelta > 0 ? '+' : ''}${oeeDelta}% OEE momentum`)}
             </div>
 
-            <div class="grid grid-2 mb-5">
+            <div class="grid grid-2 mb-4">
                 <div class="card">
                     <div class="card-header"><span class="card-title">Overall Equipment Effectiveness (OEE) Trend</span></div>
-                    <div class="chart-container" style="height:300px"><canvas id="oeeTrendChart"></canvas></div>
+                    <div class="chart-container trends-chart" style="height:240px"><canvas id="oeeTrendChart"></canvas></div>
                 </div>
                 <div class="card">
                     <div class="card-header"><span class="card-title">Production Downtime Analysis</span></div>
-                    <div class="chart-container" style="height:300px"><canvas id="downtimeChart"></canvas></div>
+                    <div class="chart-container trends-chart" style="height:240px"><canvas id="downtimeChart"></canvas></div>
                 </div>
             </div>
         </div>
 
         <div id="tab-reliability" class="tab-content" style="display:none">
-            <div class="grid grid-4 mb-5 stagger">
+            <div class="grid grid-6 mb-4 stagger" id="reliabilityKpis">
                 ${metricCard('MTBF (Fleet Avg)', DATA.kpis.mtbf + 'h', 'fa-history', 'green', 'Mean Time Between Failures')}
                 ${metricCard('MTTR (Fleet Avg)', DATA.kpis.mttr + 'h', 'fa-wrench', 'amber', 'Mean Time To Repair')}
                 ${metricCard('Failure Rate', '0.042', 'fa-exclamation-triangle', 'red', 'Failures per month')}
                 ${metricCard('RCM Compliance', '92%', 'fa-shield-alt', 'purple', 'Reliability Centered Maintenance')}
+                ${metricCard('Avg RUL', DATA.kpis.avgRul + 'd', 'fa-hourglass-half', 'blue', 'Fleet average remaining life')}
+                ${metricCard('Predictive Accuracy', predictiveAccuracy + '%', 'fa-bullseye', 'green', `${mtbfDelta > 0 ? '+' : ''}${mtbfDelta}h MTBF momentum`)}
             </div>
 
-            <div class="grid grid-2 mb-5">
+            <div class="grid grid-2 mb-4">
                 <div class="card">
                     <div class="card-header"><span class="card-title">MTBF vs MTTR Correlation</span></div>
-                    <div class="chart-container" style="height:300px"><canvas id="mtbfChart"></canvas></div>
+                    <div class="chart-container trends-chart" style="height:240px"><canvas id="mtbfChart"></canvas></div>
                 </div>
                 <div class="card">
                     <div class="card-header"><span class="card-title">Root Cause Analysis (Top Faults)</span></div>
-                    <div class="chart-container" style="height:300px"><canvas id="rcaChart"></canvas></div>
+                    <div class="chart-container trends-chart" style="height:240px"><canvas id="rcaChart"></canvas></div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
+        <div class="card trends-report-card">
             <div class="card-header">
                 <span class="card-title">Generate Custom Report</span>
             </div>

@@ -1,0 +1,5 @@
+asset_id,asset_type,site,area,criticality
+CMP-001,compressor,Plant-A,Utilities,High
+CMP-002,compressor,Plant-A,Utilities,Medium
+MTR-001,motor,Plant-A,Line-1,High
+MTR-002,motor,Plant-A,Line-2,Medium

@@ -1,0 +1,15 @@
+asset_type,tag_name,unit,sampling_sec,source_system,measurement_type
+compressor,vibration_rms,mm/s,60,PI,condition
+compressor,bearing_temp,C,60,PI,condition
+compressor,discharge_pressure,bar,60,SCADA,process
+compressor,suction_pressure,bar,60,SCADA,process
+compressor,motor_current,A,60,SCADA,electrical
+compressor,ambient_temp,C,300,IoT,environment
+compressor,run_status,bool,60,SCADA,status
+motor,vibration_rms,mm/s,60,PI,condition
+motor,winding_temp,C,60,PI,condition
+motor,current_rms,A,60,SCADA,electrical
+motor,voltage_imbalance,%,60,SCADA,electrical
+motor,rpm,rpm,60,SCADA,process
+motor,ambient_temp,C,300,IoT,environment
+motor,run_status,bool,60,SCADA,status

@@ -1,0 +1,9 @@
+asset_type,tag_name,weight
+compressor,vibration_rms,0.4
+compressor,bearing_temp,0.3
+compressor,motor_current,0.2
+compressor,discharge_pressure,0.1
+motor,vibration_rms,0.4
+motor,winding_temp,0.3
+motor,voltage_imbalance,0.15
+motor,current_rms,0.15
